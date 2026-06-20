@@ -1,0 +1,7 @@
+# Build output
+/build/
+/.pio/
+
+# OS
+.DS_Store
+Thumbs.db

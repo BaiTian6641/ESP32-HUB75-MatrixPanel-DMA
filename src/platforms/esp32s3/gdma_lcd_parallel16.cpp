@@ -304,8 +304,13 @@
     {
       heap_caps_free(_dmadesc_a);
       _dmadesc_a = nullptr;
-      _dmadesc_count = 0;
     }
+    if (_dmadesc_b)
+    {
+      heap_caps_free(_dmadesc_b);
+      _dmadesc_b = nullptr;
+    }
+    _dmadesc_count = 0;
 
   }
 
@@ -318,7 +323,8 @@
   // Need this to work for double buffers etc.
   bool Bus_Parallel16::allocate_dma_desc_memory(size_t len)
   {
-    if (_dmadesc_a) heap_caps_free(_dmadesc_a); // free all dma descrptios previously
+    if (_dmadesc_a) { heap_caps_free(_dmadesc_a); _dmadesc_a = nullptr; }
+    if (_dmadesc_b) { heap_caps_free(_dmadesc_b); _dmadesc_b = nullptr; }
     _dmadesc_count = len;
 
     ESP_LOGD("S3", "Allocating %d bytes memory for DMA descriptors.", (int)sizeof(HUB75_DMA_DESCRIPTOR_T) * len);        
@@ -338,7 +344,12 @@
       if (_dmadesc_b == nullptr)
       {
         ESP_LOGE("S3", "ERROR: Couldn't malloc _dmadesc_b. Not enough memory.");
+        // Clean up _dmadesc_a and disable double-buffering rather than crashing.
+        heap_caps_free(_dmadesc_a);
+        _dmadesc_a = nullptr;
+        _dmadesc_count = 0;
         _double_dma_buffer = false;
+        return false;
       }
     }
 
